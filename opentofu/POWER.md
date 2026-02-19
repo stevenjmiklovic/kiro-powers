@@ -3,7 +3,7 @@ name: "opentofu"
 displayName: "Deploy infrastructure with OpenTofu"
 description: "Build and manage Infrastructure as Code with OpenTofu - access registry providers and modules, manage state, and execute tofu workflows using the open-source Terraform-compatible toolchain"
 keywords: ["opentofu", "tofu", "terraform", "infrastructure", "IaC", "providers", "modules", "registry", "open-source"]
-author: "OpenTofu"
+author: "Steven J Miklovic"
 ---
 
 # OpenTofu Power
