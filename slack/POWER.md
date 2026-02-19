@@ -3,7 +3,7 @@ name: "slack"
 displayName: "Slack Communication"
 description: "Integrate two-way Slack communication into your workflows - send and read messages, manage channels, search conversations, and connect with your Slack App for real-time org collaboration"
 keywords: ["slack", "messaging", "channels", "notifications", "communication", "collaboration", "bots", "workspace"]
-author: "Slack"
+author: "Steven J Miklovic"
 ---
 
 # Onboarding
