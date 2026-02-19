@@ -10,7 +10,7 @@ author: "OpenTofu"
 
 ## Overview
 
-Access Terraform Registry APIs for IaC development with OpenTofu. Search provider docs, discover modules, and manage infrastructure with the open-source `tofu` CLI.
+Access the OpenTofu Registry via the official OpenTofu MCP server for IaC development. Search provider docs, discover modules, and manage infrastructure with the open-source `tofu` CLI.
 
 OpenTofu is an open-source fork of Terraform (MPL-2.0 licensed) that is fully compatible with Terraform provider and module registries. Use this power instead of the Terraform Power when working with OpenTofu.
 
@@ -18,7 +18,7 @@ OpenTofu is an open-source fork of Terraform (MPL-2.0 licensed) that is fully co
 - **Provider Documentation**: Search and retrieve docs for resources, data sources, functions
 - **Module Discovery**: Find verified and community modules from the Registry
 - **OpenTofu CLI**: Full `tofu` workflow (init, validate, plan, apply)
-- **Registry Compatibility**: Works with both `registry.opentofu.org` and `registry.terraform.io`
+- **Registry Compatibility**: Works with `registry.opentofu.org`
 
 > **Why not the Terraform Power?** The Terraform Power includes HCP Terraform workspace management tools that are specific to HashiCorp's commercial platform and are not applicable to OpenTofu. This power is focused on the open-source OpenTofu toolchain and excludes HCP Terraform features.
 
@@ -29,10 +29,8 @@ OpenTofu is an open-source fork of Terraform (MPL-2.0 licensed) that is fully co
 
 ## Available MCP Servers
 
-### terraform
-**Package:** `hashicorp/terraform-mcp-server` | **Connection:** Docker stdio
-
-> **Note:** Only the registry tools (providers, modules) are applicable for OpenTofu. HCP Terraform tools (`list_terraform_orgs`, `list_workspaces`, `create_run`, etc.) are specific to HashiCorp's platform and should not be used with OpenTofu.
+### opentofu
+**URL:** `https://mcp.opentofu.org/sse` | **Connection:** SSE (no installation required)
 
 **Provider Tools:**
 
@@ -50,20 +48,12 @@ OpenTofu is an open-source fork of Terraform (MPL-2.0 licensed) that is fully co
 | `get_module_details` | Get comprehensive module information | Complete documentation with inputs, outputs, examples, and submodules |
 | `get_latest_module_version` | Retrieve the latest version of a specific module | The latest version of a module |
 
-**Policy Tools:**
-
-| Tool | Purpose | Returns |
-|------|---------|---------|
-| `search_policies` | Find Sentinel policies by topic or requirement | Policy listings with IDs, names, and download statistics |
-| `get_policy_details` | Retrieve detailed policy documentation | Policy implementation details and usage instructions |
-
 ## Examples
 
 ```javascript
 // 1. Search for S3 bucket resource docs
 search_providers({
   "provider_name": "aws",
-  "provider_namespace": "hashicorp",
   "service_slug": "s3_bucket",
   "provider_document_type": "resources"
 })
@@ -89,7 +79,6 @@ get_latest_provider_version({ "namespace": "hashicorp", "name": "aws" })
 // Step 1: Search provider docs
 const results = search_providers({
   "provider_name": "aws",
-  "provider_namespace": "hashicorp",
   "service_slug": "lambda_function",
   "provider_document_type": "resources"
 })
@@ -105,7 +94,7 @@ const version = get_latest_provider_version({ "namespace": "hashicorp", "name": 
 
 ## Configuration
 
-**Prerequisites:** Docker installed and running, OpenTofu CLI (`tofu`) installed
+**Prerequisites:** OpenTofu CLI (`tofu`) installed. No Docker or API token required for registry access — the MCP server connects automatically via SSE.
 
 ### OpenTofu CLI Workflow
 
@@ -170,15 +159,15 @@ terraform {
 | Error | Solution |
 |-------|----------|
 | Provider/Module not found | Use `search_*` first to get valid IDs |
-| Docker not running | Start Docker daemon |
 | `tofu: command not found` | Install OpenTofu: https://opentofu.org/docs/intro/install/ |
 | Provider version mismatch | Run `tofu init -upgrade` to update providers |
 | State lock error | Ensure no other `tofu` process is running; use `tofu force-unlock <lock-id>` if stale |
+| MCP server unreachable | Check network connectivity to `mcp.opentofu.org` |
 
 ## Resources
 
-[OpenTofu Docs](https://opentofu.org/docs/) · [OpenTofu Registry](https://registry.opentofu.org) · [Terraform Registry](https://registry.terraform.io) · [MCP Server repo](https://github.com/hashicorp/terraform-mcp-server) · [OpenTofu GitHub](https://github.com/opentofu/opentofu)
+[OpenTofu Docs](https://opentofu.org/docs/) · [OpenTofu Registry](https://registry.opentofu.org) · [OpenTofu MCP Server](https://mcp.opentofu.org) · [OpenTofu GitHub](https://github.com/opentofu/opentofu)
 
 ---
 
-**MCP Package:** `hashicorp/terraform-mcp-server` | **OpenTofu License:** MPL-2.0
+**OpenTofu MCP:** `https://mcp.opentofu.org/sse` | **OpenTofu License:** MPL-2.0

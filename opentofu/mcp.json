@@ -1,43 +1,8 @@
 {
   "mcpServers": {
-    "terraform": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "hashicorp/terraform-mcp-server"
-      ],
-      "env": {},
-      "disabled": false,
-      "disabledTools": [
-        "list_terraform_orgs",
-        "list_terraform_projects",
-        "list_workspaces",
-        "get_workspace_details",
-        "create_workspace",
-        "update_workspace",
-        "delete_workspace_safely",
-        "list_runs",
-        "get_run_details",
-        "create_run",
-        "action_run",
-        "search_private_modules",
-        "get_private_module_details",
-        "search_private_providers",
-        "get_private_provider_details",
-        "list_variable_sets",
-        "create_variable_set",
-        "create_variable_in_variable_set",
-        "delete_variable_in_variable_set",
-        "attach_variable_set_to_workspaces",
-        "detach_variable_set_from_workspaces",
-        "list_workspace_variables",
-        "create_workspace_variable",
-        "update_workspace_variable",
-        "create_workspace_tags",
-        "read_workspace_tags"
-      ]
+    "opentofu": {
+      "type": "sse",
+      "url": "https://mcp.opentofu.org/sse"
     }
   }
 }
