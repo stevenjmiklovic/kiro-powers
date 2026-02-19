@@ -145,7 +145,7 @@ slack_post_message({
 
 ### Rate Limits
 
-- Slack enforces [Tier-based rate limits](https://api.slack.com/docs/rate-limits); most methods allow 1 request/second
+- Slack enforces [Tier-based rate limits](https://api.slack.com/docs/rate-limits); most methods are Tier 3 (50+ requests/minute), search methods are Tier 2 (20+ requests/minute)
 - Use `slack_search_messages` instead of looping through history for large-scale lookups
 - Batch user lookups with `slack_get_users` instead of individual `slack_get_user_profile` calls
 
