@@ -32,62 +32,49 @@ OpenTofu is an open-source fork of Terraform (MPL-2.0 licensed) that is fully co
 ### opentofu
 **URL:** `https://mcp.opentofu.org/sse` | **Connection:** SSE (no installation required)
 
-**Provider Tools:**
+| Tool | Purpose | Key Inputs |
+|------|---------|------------|
+| `search-opentofu-registry` | Search for providers, modules, resources, and data sources | `query` (string), `type` (`provider`\|`module`\|`resource`\|`data-source`\|`all`) |
+| `get-provider-details` | Get detailed information about a specific provider | `namespace`, `name` |
+| `get-module-details` | Get detailed information about a specific module | `namespace`, `name`, `target` |
+| `get-resource-docs` | Get documentation for a specific resource type | `namespace`, `name`, `resource`, `version` (optional) |
+| `get-datasource-docs` | Get documentation for a specific data source type | `namespace`, `name`, `dataSource`, `version` (optional) |
 
-| Tool | Purpose | Returns |
-|------|---------|---------|
-| `search_providers` | Find provider documentation by service name | List of available documentation with IDs, titles, and categories |
-| `get_provider_details` | Retrieve complete documentation for a specific provider component | Full documentation content in markdown format |
-| `get_latest_provider_version` | Retrieve the latest version of a specific provider | The latest version of a provider |
-
-**Module Tools:**
-
-| Tool | Purpose | Returns |
-|------|---------|---------|
-| `search_modules` | Find modules by name or functionality | Module details including names, descriptions, download counts, and verification status |
-| `get_module_details` | Get comprehensive module information | Complete documentation with inputs, outputs, examples, and submodules |
-| `get_latest_module_version` | Retrieve the latest version of a specific module | The latest version of a module |
+> **Tip:** Do **not** include prefixes like `terraform-provider-` in provider names or `terraform-aws-` in module names. Use simple terms: `aws`, `vpc`, `s3_bucket`.
 
 ## Examples
 
 ```javascript
-// 1. Search for S3 bucket resource docs
-search_providers({
-  "provider_name": "aws",
-  "service_slug": "s3_bucket",
-  "provider_document_type": "resources"
-})
-// Returns: provider_doc_id like "10735923"
+// 1. Search for the AWS provider
+search-opentofu-registry({ "query": "aws", "type": "provider" })
 
-// 2. Get full documentation
-get_provider_details({ "provider_doc_id": "10735923" })
+// 2. Get full provider details
+get-provider-details({ "namespace": "hashicorp", "name": "aws" })
 
-// 3. Search for VPC modules
-search_modules({ "module_query": "vpc" })
-// Returns: module_id like "terraform-aws-modules/vpc/aws/6.5.1"
+// 3. Get S3 bucket resource documentation
+get-resource-docs({ "namespace": "hashicorp", "name": "aws", "resource": "s3_bucket" })
 
-// 4. Get module details
-get_module_details({ "module_id": "terraform-aws-modules/vpc/aws/6.5.1" })
+// 4. Get AMI data source documentation
+get-datasource-docs({ "namespace": "hashicorp", "name": "aws", "dataSource": "ami" })
 
-// 5. Get latest provider version
-get_latest_provider_version({ "namespace": "hashicorp", "name": "aws" })
+// 5. Find a VPC module
+search-opentofu-registry({ "query": "vpc", "type": "module" })
+
+// 6. Get VPC module details
+get-module-details({ "namespace": "terraform-aws-modules", "name": "vpc", "target": "aws" })
 ```
 
 ## Workflow: Research → Write Config
 
 ```javascript
-// Step 1: Search provider docs
-const results = search_providers({
-  "provider_name": "aws",
-  "service_slug": "lambda_function",
-  "provider_document_type": "resources"
-})
+// Step 1: Search for the resource you need
+search-opentofu-registry({ "query": "lambda", "type": "resource" })
 
-// Step 2: Get detailed docs using provider_doc_id from results
-const docs = get_provider_details({ "provider_doc_id": "..." })
+// Step 2: Get full resource documentation
+get-resource-docs({ "namespace": "hashicorp", "name": "aws", "resource": "lambda_function" })
 
-// Step 3: Get version for constraint
-const version = get_latest_provider_version({ "namespace": "hashicorp", "name": "aws" })
+// Step 3: Get provider details for version constraint
+get-provider-details({ "namespace": "hashicorp", "name": "aws" })
 
 // Now write accurate OpenTofu config using tofu CLI
 ```
@@ -150,7 +137,7 @@ terraform {
 
 ## Best Practices
 
-**Do:** Always `search_*` before `get_*_details`, pin versions, use modules, review plans
+**Do:** Always `search-opentofu-registry` before `get-*-details`, pin versions, use modules, review plans
 
 **Don't:** Hardcode credentials, skip plan review, use `auto_approve` blindly, use HCP Terraform tools (they are not applicable for OpenTofu)
 
@@ -158,7 +145,7 @@ terraform {
 
 | Error | Solution |
 |-------|----------|
-| Provider/Module not found | Use `search_*` first to get valid IDs |
+| Provider/Module not found | Use `search-opentofu-registry` first to find valid namespace/name values |
 | `tofu: command not found` | Install OpenTofu: https://opentofu.org/docs/intro/install/ |
 | Provider version mismatch | Run `tofu init -upgrade` to update providers |
 | State lock error | Ensure no other `tofu` process is running; use `tofu force-unlock <lock-id>` if stale |

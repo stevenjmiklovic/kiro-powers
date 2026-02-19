@@ -52,7 +52,14 @@ choco install opentofu
 
 Ask: "Which cloud provider? (AWS, Azure, GCP, other)"
 
-Use the OpenTofu MCP to get provider info - search for the provider by name to find documentation and the latest version.
+Use the OpenTofu MCP to get provider info:
+```javascript
+// Search for the provider
+search-opentofu-registry({ "query": "aws", "type": "provider" })
+
+// Get provider details including available versions
+get-provider-details({ "namespace": "hashicorp", "name": "aws" })
+```
 
 ## Step 4: Create Base Files
 
@@ -88,9 +95,19 @@ variable "aws_region" {
 ## Step 5: First Resource
 
 Ask what to create, then:
-1. Use the OpenTofu MCP to search for provider documentation by resource type
-2. Retrieve the full resource docs to understand required arguments and attributes
-3. If a community module covers the use case, search for modules instead
+1. Search the registry for the resource or module:
+   ```javascript
+   search-opentofu-registry({ "query": "s3_bucket", "type": "resource" })
+   ```
+2. Retrieve full resource documentation:
+   ```javascript
+   get-resource-docs({ "namespace": "hashicorp", "name": "aws", "resource": "s3_bucket" })
+   ```
+3. Or find a community module:
+   ```javascript
+   search-opentofu-registry({ "query": "vpc", "type": "module" })
+   get-module-details({ "namespace": "terraform-aws-modules", "name": "vpc", "target": "aws" })
+   ```
 
 ## Step 6: Initialize
 
