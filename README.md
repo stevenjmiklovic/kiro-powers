@@ -56,6 +56,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ---
 
+### discord
+**Discord Communication** - Integrate two-way Discord communication into your workflows - send and read messages, manage channels, search conversations, and connect with your Discord Bot for real-time server collaboration.
+
+**MCP Servers:** discord (Local stdio via npx)
+
+---
+
 ### dynatrace
 **Dynatrace Observability** - Query logs, metrics, traces, problems, and security vulnerabilities using DQL (Dynatrace Query Language) and Davis AI.
 
