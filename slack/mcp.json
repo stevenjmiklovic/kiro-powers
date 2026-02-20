@@ -1,7 +1,8 @@
 {
   "mcpServers": {
     "slack": {
-      "url": "https://mcp.slack.com/sse"
+      "url": "https://mcp.slack.com/mcp",
+      "transport": "streamable-http"
     }
   }
 }

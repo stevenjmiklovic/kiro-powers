@@ -1,6 +1,6 @@
 ---
 name: "slack"
-displayName: "Slack Communication"
+displayName: "Slack Communication Broker"
 description: "Integrate two-way Slack communication into your workflows - send and read messages, manage channels, search conversations, and connect with your Slack App for real-time org collaboration"
 keywords: ["slack", "messaging", "channels", "notifications", "communication", "collaboration", "bots", "workspace"]
 author: "Steven J Miklovic"
@@ -44,7 +44,7 @@ Use this power to send automated notifications when deployments complete, surfac
 
 ### slack
 
-**Connection:** SSE endpoint at `https://mcp.slack.com/sse`
+**Connection:** JSON-RPC 2.0 over Streamable HTTP at `https://mcp.slack.com/mcp`
 **Authorization:** Use OAuth to connect to the Slack MCP server
 
 **Key tools:**
@@ -196,11 +196,14 @@ slack_post_message({
 {
   "mcpServers": {
     "slack": {
-      "url": "https://mcp.slack.com/sse"
+      "url": "https://mcp.slack.com/mcp",
+      "transport": "streamable-http"
     }
   }
 }
 ```
+
+**Note:** Slack MCP server uses JSON-RPC 2.0 over Streamable HTTP. SSE transport is not supported.
 
 ## Troubleshooting
 
