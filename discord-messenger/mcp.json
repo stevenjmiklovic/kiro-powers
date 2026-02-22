@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "discord": {
-      "command": "npx",
-      "args": ["-y", "discord-mcp"],
+      "command": "sh",
+      "args": ["discord-wrapper.sh"],
       "env": {
         "DISCORD_TOKEN": ""
       }
