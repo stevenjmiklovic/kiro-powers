@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "discord-admin": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "saseq/discord-mcp:latest"
+      ],
+      "env": {
+        "DISCORD_TOKEN": "",
+        "DISCORD_GUILD_ID": ""
+      }
+    }
+  }
+}
