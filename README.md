@@ -13,6 +13,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ---
 
+### alice-whiterabbit
+**JHU White Rabbit** - Guide to ALICE (AWS Language Intelligence and Cognitive Exploration) — manage Bedrock credentials, invoke LLMs, and use AI research utilities at Johns Hopkins.
+
+**MCP Servers:** None (Knowledge Base Power)
+
+---
+
 ### atlassian
 **Atlassian Admin** - Manage Jira projects, issues, and sprints alongside Confluence spaces and pages - plan work, track bugs, and document everything using the official Atlassian MCP server.
 
