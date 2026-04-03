@@ -237,6 +237,7 @@ function generateHTML(powers) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kiro Powers Catalog</title>
+  <link rel="icon" type="image/png" href="data:image/png;base64,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">
   <style>
     :root {
       --color-bg: #0d1117;
@@ -292,7 +293,7 @@ function generateHTML(powers) {
       flex-shrink: 0;
     }
 
-    .logo svg {
+    .logo img {
       width: 32px;
       height: 32px;
     }
@@ -698,12 +699,7 @@ function generateHTML(powers) {
 <header class="header">
   <div class="header-inner">
     <a href="#" class="logo">
-      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="8" fill="#58a6ff" fill-opacity="0.15"/>
-        <path d="M16 6L22 10V22L16 26L10 22V10L16 6Z" stroke="#58a6ff" stroke-width="1.5" fill="none"/>
-        <path d="M16 6V26M10 10L22 22M22 10L10 22" stroke="#58a6ff" stroke-width="1" opacity="0.4"/>
-        <circle cx="16" cy="16" r="3" fill="#58a6ff"/>
-      </svg>
+      <img src="data:image/png;base64,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" alt="Kiro" width="32" height="32" style="border-radius:6px;">
       <span class="logo-text">Kiro <span>Powers</span></span>
     </a>
     <div class="search-box">
