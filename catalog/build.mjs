@@ -18,6 +18,9 @@ const OUT_DIR = resolve(ROOT, "_site");
 const MAX_SUMMARY_LENGTH = 300;
 const POWER_TYPE_MCP = "Guided MCP Power";
 const POWER_TYPE_KB = "Knowledge Base Power";
+const CUSTOM_AUTHOR = "Steven J Miklovic";
+const SOURCE_CUSTOM = "Custom (SXS)";
+const SOURCE_DEFAULT = "Default";
 
 // Directories to skip (not powers)
 const SKIP_DIRS = new Set([
@@ -174,18 +177,21 @@ async function scanPower(dirPath, dirName) {
   }
 
   const powerType = hasMcp ? POWER_TYPE_MCP : POWER_TYPE_KB;
+  const author = frontmatter.author || "Community";
+  const source = author === CUSTOM_AUTHOR ? SOURCE_CUSTOM : SOURCE_DEFAULT;
 
   return {
     id: dirName,
     name: frontmatter.displayName || frontmatter.name || dirName,
     description: frontmatter.description || summary || "",
-    author: frontmatter.author || "Community",
+    author,
     keywords: Array.isArray(frontmatter.keywords)
       ? frontmatter.keywords
       : frontmatter.keywords
         ? [frontmatter.keywords]
         : [],
     type: powerType,
+    source,
     mcpServers,
     steeringCount: steeringFiles.length,
     docLines: powerMdLines,
@@ -457,6 +463,24 @@ function generateHTML(powers) {
       color: var(--color-purple);
     }
 
+    .badge-source-custom {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--color-orange);
+    }
+
+    .badge-source-default {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--color-green);
+    }
+
+    .card.source-custom {
+      border-left: 3px solid var(--color-orange);
+    }
+
+    .card.source-default {
+      border-left: 3px solid var(--color-green);
+    }
+
     .card-author {
       font-size: 12px;
       color: var(--color-text-secondary);
@@ -710,7 +734,7 @@ function generateHTML(powers) {
 const POWERS = ${powersJSON};
 const REPO_URL = "https://github.com/kirodotdev/kiro-powers";
 
-let activeFilters = { type: null, author: null };
+let activeFilters = { type: null, author: null, source: null };
 
 function escapeHTML(str) {
   const div = document.createElement("div");
@@ -722,13 +746,22 @@ function renderSidebar() {
   const sidebar = document.getElementById("sidebar");
   const types = {};
   const authors = {};
+  const sources = {};
 
   POWERS.forEach(p => {
     types[p.type] = (types[p.type] || 0) + 1;
     authors[p.author] = (authors[p.author] || 0) + 1;
+    sources[p.source] = (sources[p.source] || 0) + 1;
   });
 
-  let html = '<div class="filter-section"><h3>Type</h3>';
+  let html = '<div class="filter-section"><h3>Source</h3>';
+  html += '<button class="filter-btn' + (!activeFilters.source ? ' active' : '') + '" data-filter-type="source" data-filter-value="">All<span class="count">' + POWERS.length + '</span></button>';
+  for (const [source, count] of Object.entries(sources).sort()) {
+    html += '<button class="filter-btn' + (activeFilters.source === source ? ' active' : '') + '" data-filter-type="source" data-filter-value="' + escapeHTML(source) + '">' + escapeHTML(source) + '<span class="count">' + count + '</span></button>';
+  }
+  html += '</div>';
+
+  html += '<div class="filter-section"><h3>Type</h3>';
   html += '<button class="filter-btn' + (!activeFilters.type ? ' active' : '') + '" data-filter-type="type" data-filter-value="">All<span class="count">' + POWERS.length + '</span></button>';
   for (const [type, count] of Object.entries(types).sort()) {
     html += '<button class="filter-btn' + (activeFilters.type === type ? ' active' : '') + '" data-filter-type="type" data-filter-value="' + escapeHTML(type) + '">' + escapeHTML(type) + '<span class="count">' + count + '</span></button>';
@@ -760,9 +793,10 @@ function getFilteredPowers() {
   return POWERS.filter(p => {
     if (activeFilters.type && p.type !== activeFilters.type) return false;
     if (activeFilters.author && p.author !== activeFilters.author) return false;
+    if (activeFilters.source && p.source !== activeFilters.source) return false;
     if (query) {
       const searchable = [
-        p.name, p.id, p.description, p.author, ...p.keywords
+        p.name, p.id, p.description, p.author, p.source, ...p.keywords
       ].join(" ").toLowerCase();
       return searchable.includes(query);
     }
@@ -790,14 +824,20 @@ function renderGrid() {
   grid.innerHTML = filtered.map(p => {
     const badgeClass = p.type === "${POWER_TYPE_MCP}" ? "badge-mcp" : "badge-kb";
     const badgeLabel = p.type === "${POWER_TYPE_MCP}" ? "MCP" : "KB";
+    const sourceClass = p.source === "${SOURCE_CUSTOM}" ? "source-custom" : "source-default";
+    const sourceBadgeClass = p.source === "${SOURCE_CUSTOM}" ? "badge-source-custom" : "badge-source-default";
+    const sourceLabel = p.source === "${SOURCE_CUSTOM}" ? "SXS" : "DEFAULT";
     const keywordsHTML = p.keywords.slice(0, 4).map(k =>
       '<span class="keyword">' + escapeHTML(k) + '</span>'
     ).join("");
 
-    return '<div class="card" data-power-id="' + escapeHTML(p.id) + '">'
+    return '<div class="card ' + sourceClass + '" data-power-id="' + escapeHTML(p.id) + '">'
       + '<div class="card-header">'
       + '<span class="card-title">' + escapeHTML(p.name) + '</span>'
+      + '<div style="display:flex;gap:4px;align-items:center;">'
+      + '<span class="card-badge ' + sourceBadgeClass + '">' + sourceLabel + '</span>'
       + '<span class="card-badge ' + badgeClass + '">' + badgeLabel + '</span>'
+      + '</div>'
       + '</div>'
       + '<div class="card-author">by ' + escapeHTML(p.author) + '</div>'
       + '<div class="card-description">' + escapeHTML(p.description) + '</div>'
@@ -824,6 +864,8 @@ function openModal(power) {
   const modal = document.getElementById("modal");
 
   const badgeClass = power.type === "${POWER_TYPE_MCP}" ? "badge-mcp" : "badge-kb";
+  const sourceBadgeClass = power.source === "${SOURCE_CUSTOM}" ? "badge-source-custom" : "badge-source-default";
+  const sourceLabel = power.source === "${SOURCE_CUSTOM}" ? "SXS" : "DEFAULT";
 
   let serversHTML = "";
   if (power.mcpServers.length > 0) {
@@ -846,7 +888,7 @@ function openModal(power) {
   modal.innerHTML =
     '<button class="modal-close" id="modal-close">&times;</button>'
     + '<h2>' + escapeHTML(power.name) + '</h2>'
-    + '<div class="modal-author">by ' + escapeHTML(power.author) + ' &middot; <span class="card-badge ' + badgeClass + '">' + escapeHTML(power.type) + '</span></div>'
+    + '<div class="modal-author">by ' + escapeHTML(power.author) + ' &middot; <span class="card-badge ' + sourceBadgeClass + '">' + sourceLabel + '</span> <span class="card-badge ' + badgeClass + '">' + escapeHTML(power.type) + '</span></div>'
     + '<div class="modal-description">' + escapeHTML(power.description) + '</div>'
     + '<div class="modal-section"><h3>Documentation</h3>'
     + '<p class="meta-item" style="font-size:14px">' + power.docLines + ' lines of documentation'
