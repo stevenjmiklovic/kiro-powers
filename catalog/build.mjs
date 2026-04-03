@@ -15,6 +15,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const OUT_DIR = resolve(ROOT, "_site");
 
+const MAX_SUMMARY_LENGTH = 300;
+const POWER_TYPE_MCP = "Guided MCP Power";
+const POWER_TYPE_KB = "Knowledge Base Power";
+
 // Directories to skip (not powers)
 const SKIP_DIRS = new Set([
   ".git",
@@ -81,7 +85,7 @@ function extractSummary(content) {
     summary = trimmed;
     break;
   }
-  return summary.slice(0, 300);
+  return summary.slice(0, MAX_SUMMARY_LENGTH);
 }
 
 /**
@@ -169,7 +173,7 @@ async function scanPower(dirPath, dirName) {
     // No steering directory
   }
 
-  const powerType = hasMcp ? "Guided MCP Power" : "Knowledge Base Power";
+  const powerType = hasMcp ? POWER_TYPE_MCP : POWER_TYPE_KB;
 
   return {
     id: dirName,
@@ -784,8 +788,8 @@ function renderGrid() {
   empty.style.display = "none";
 
   grid.innerHTML = filtered.map(p => {
-    const badgeClass = p.type === "Guided MCP Power" ? "badge-mcp" : "badge-kb";
-    const badgeLabel = p.type === "Guided MCP Power" ? "MCP" : "KB";
+    const badgeClass = p.type === "${POWER_TYPE_MCP}" ? "badge-mcp" : "badge-kb";
+    const badgeLabel = p.type === "${POWER_TYPE_MCP}" ? "MCP" : "KB";
     const keywordsHTML = p.keywords.slice(0, 4).map(k =>
       '<span class="keyword">' + escapeHTML(k) + '</span>'
     ).join("");
@@ -819,7 +823,7 @@ function openModal(power) {
   const overlay = document.getElementById("modal-overlay");
   const modal = document.getElementById("modal");
 
-  const badgeClass = power.type === "Guided MCP Power" ? "badge-mcp" : "badge-kb";
+  const badgeClass = power.type === "${POWER_TYPE_MCP}" ? "badge-mcp" : "badge-kb";
 
   let serversHTML = "";
   if (power.mcpServers.length > 0) {
