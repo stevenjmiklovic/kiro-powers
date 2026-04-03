@@ -1,12 +1,12 @@
-# Workflow Versioning Guide
+# SOP: Workflow Versioning
 
-## Overview
+## Purpose
 
-When a customer is modifying an existing HealthOmics workflow, **always use `CreateAHOWorkflowVersion`** to create a new version rather than creating an entirely new workflow. This preserves workflow history, maintains consistent workflow IDs for downstream integrations, and follows AWS HealthOmics best practices.
+This SOP defines how you, the agent, handle modifications to existing HealthOmics workflows. You MUST use `CreateAHOWorkflowVersion` to create a new version rather than creating an entirely new workflow. This preserves workflow history, maintains consistent workflow IDs, and follows HealthOmics best practices.
 
-## When to Use Workflow Versioning
+## Trigger Conditions
 
-**Use `CreateAHOWorkflowVersion` when:**
+Use `CreateAHOWorkflowVersion` WHEN:
 - Fixing bugs in an existing workflow
 - Adding new features or tasks to a workflow
 - Updating container images or versions
@@ -15,66 +15,65 @@ When a customer is modifying an existing HealthOmics workflow, **always use `Cre
 - Optimizing workflow performance after analyzing run metrics
 - Applying fixes after diagnosing run failures
 
-**Use `CreateAHOWorkflow` only when:**
+Use `CreateAHOWorkflow` ONLY WHEN:
 - Creating a brand new workflow that doesn't exist yet
 - The workflow represents fundamentally different functionality
 - The customer explicitly requests a new workflow ID
 
-## Workflow Modification Process
+## Procedure
 
-1. **Identify the existing workflow**
-   - Use `ListAHOWorkflows` to find the workflow
-   - Use `GetAHOWorkflow` to retrieve current workflow details including the workflow ID
+### Step 1: Identify the Existing Workflow
 
-2. **Make modifications locally**
-   - Edit the workflow definition files
-   - Use `LintAHOWorkflowDefinition` or `LintAHOWorkflowBundle` to validate changes
+1. Call `ListAHOWorkflows` to find the workflow.
+2. Call `GetAHOWorkflow` to retrieve current workflow details including the workflow ID.
 
-3. **Package the updated workflow**
-   - Use `PackageAHOWorkflowDefinition` for single-file workflows
-   - Use `PackageAHOWorkflowBundle` for multi-file workflows
+### Step 2: Make Modifications Locally
 
-4. **Create a new version**
-   - Use `CreateAHOWorkflowVersion` with the existing workflow ID
-   - Apply semantic versioning (e.g., `1.0.0` → `1.0.1` for patches, `1.1.0` for features)
-   - Include a meaningful description of changes
+1. Edit the workflow definition files as needed.
+2. Call `LintAHOWorkflowDefinition` or `LintAHOWorkflowBundle` to validate changes.
+3. DO NOT proceed if linting errors exist — resolve them first.
 
-5. **Verify the new version**
-   - Use `GetAHOWorkflow` to confirm the version was created successfully
-   - Check that the workflow status is `ACTIVE`
+### Step 3: Package the Updated Workflow
 
-## Version Naming Conventions
+- Call `PackageAHOWorkflow` to create a zip package of the workflow.
 
-Follow semantic versioning for workflow versions:
-- **MAJOR.MINOR.PATCH** (e.g., `1.0.0`, `2.1.3`)
-- **MAJOR**: Breaking changes to inputs/outputs
-- **MINOR**: New features, backward compatible
-- **PATCH**: Bug fixes, performance improvements
+### Step 4: Create a New Version
 
-## Benefits of Versioning
+1. Call `CreateAHOWorkflowVersion` with the existing workflow ID.
+2. Apply semantic versioning:
+   - MAJOR (e.g., `1.0.0` → `2.0.0`): Breaking changes to inputs/outputs
+   - MINOR (e.g., `1.0.0` → `1.1.0`): New features, backward compatible
+   - PATCH (e.g., `1.0.0` → `1.0.1`): Bug fixes, performance improvements
+3. Include a meaningful description of changes.
 
-- **Audit Trail**: Complete history of workflow changes
-- **Rollback Capability**: Easy to revert to previous versions if issues arise
-- **Consistent Integration**: Downstream systems can reference the same workflow ID
-- **Cost Tracking**: All runs grouped under a single workflow for billing analysis
-- **Compliance**: Maintains lineage for regulatory requirements in genomics workflows
+### Step 5: Verify the New Version
+
+1. Call `GetAHOWorkflow` to confirm the version was created successfully.
+2. Confirm status is `ACTIVE`.
 
 ## Common Scenarios
 
 ### After Diagnosing a Run Failure
-When `DiagnoseAHORunFailure` identifies an issue:
-1. Fix the workflow definition
-2. Create a new version with `CreateAHOWorkflowVersion`
-3. Re-run using the updated workflow version
+1. `DiagnoseAHORunFailure` identifies the issue.
+2. Fix the workflow definition.
+3. Call `CreateAHOWorkflowVersion` with the fix.
+4. Re-run using the updated workflow version.
 
 ### After Performance Optimization
-When `AnalyzeAHORunPerformance` suggests improvements:
-1. Apply recommended resource adjustments
-2. Create a new version with `CreateAHOWorkflowVersion`
-3. Run the optimized version to validate improvements
+1. `AnalyzeAHORunPerformance` suggests improvements.
+2. Apply recommended resource adjustments.
+3. Call `CreateAHOWorkflowVersion` with the optimizations.
+4. Run the optimized version to validate improvements.
 
 ### Updating Container Images
-When updating to newer container versions:
-1. Update container references in task definitions
-2. Test locally if possible
-3. Create a new version with `CreateAHOWorkflowVersion`
+1. Update container references in task definitions.
+2. Test locally if possible.
+3. Call `CreateAHOWorkflowVersion` with the updated containers.
+
+## Benefits of Versioning
+
+- Audit trail: complete history of workflow changes
+- Rollback capability: easy to revert to previous versions
+- Consistent integration: downstream systems reference the same workflow ID
+- Cost tracking: all runs grouped under a single workflow for billing
+- Compliance: maintains lineage for regulatory requirements in genomics workflows

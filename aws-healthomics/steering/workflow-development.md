@@ -1,107 +1,98 @@
-# Workflow Development Guide
+# SOP: Workflow Development
 
-## Overview
+## Purpose
 
-This guide covers the complete process of developing genomics workflows for AWS HealthOmics including creation, deployment and running.
+This SOP defines how you, the agent, create and deploy genomics workflows for AWS HealthOmics from local files. For running deployed workflows, see the [Running a Workflow SOP](./running-a-workflow.md).
 
-## Creating a Workflow
- **Language**
- - Use WDL 1.1, Nextflow DSL2 or CWL 1.2 for workflows.
- - Prefer WDL 1.1 unless otherwise instructed
+## Procedure: Creating a Workflow
 
- **Structure**
- - Define a top level `main.wdl`, `main.cwl`, `main.nf` or `main.cwl` file
- - Define a `tasks` folder with subfolders for each task
- - Define a `workflows` folder with subfolders for each sub-workflow
+### Language Selection
+- Use WDL 1.1, Nextflow DSL2, or CWL 1.2.
+- PREFER WDL 1.1 unless the user instructs otherwise.
 
- **Code Docs**
- - Use comments to document the purpose of each task and workflow
- - For WDL generate meta and parameter_meta blocks to document the workflow and parameters
- - For Nextflow generate nf-schema.json to document the workflow and parameters
- - Create a detailed README.md 
+### Structure
+- Define a top-level entry point: `main.wdl`, `main.nf`, or `main.cwl`.
+- IF writing a Nexflow workflow, THEN follow the nf-core project structure.
+- IF writing WDL or CWL, THEN place tasks in a `./tasks/` folder structs in `./structs/` etc and reference these via imports
 
- **Scripting**
- - Use BASH best practices for the definition of the task/ process command/ script
- - Use `set -eu` to prevent silent failures
- - In WDL use the ~{var_name} interpolation syntax for variable substitution
- - In WDL use <<< >>> syntax to delimit the command block
+### Code Documentation
+- Use comments to document the purpose of each task and workflow.
+- For WDL: generate `meta` and `parameter_meta` blocks.
+- For Nextflow: generate `nf-schema.json`.
+- You MUST create a detailed `README.md` describing the purpose of the workflow, it's inputs, steps, and outputs.
 
- **Parallelization**
- - Use `scatter` patterns and Nextflow `Channels` to parallelize tasks
- - Where possible scatter over samples and genomic intervals
- - Consider computing intervals in reference genomes so they have approximately even sizes
- - HealthOmics can support large scatters but may require requesting increases to quota limits (Maximum concurrent tasks per run)
+### Scripting Rules
+- Use BASH best practices for task/process command/script definitions.
+- You MUST use `set -eu` to prevent silent failures.
+- In WDL:
+    - You MUST use `~{var_name}` interpolation syntax when interpolating variables in Strings.
+    - You MUST use `<<< >>>` syntax to delimit the command block. DO NOT use curly braces.
 
- **Task Parameters**
- - All tasks (or processes) must declare CPU, memory and container requirements
- - Use reasonable resource allocations with at least 1GB of memory and 1 CPU for all tasks
- - Consider setting timeouts and retries for workflow tasks using language appropriate directives
+### Parallelization
+- WHERE possible, use `scatter` patterns (WDL) and `Channels` (Nextflow) to parallelize tasks.
+- WHERE possible, scatter over arrays of samples.
+- IF the software in a task is capable of using intervals THEN you MUST use intervals to parallelize (scatter) tasks.
+- You MAY compute intervals in reference genomes so they have approximately even sizes.
+- NOTE: HealthOmics supports large scatters but may require quota limit increases (Maximum concurrent tasks per run).
 
- **Outputs**
- - Final Workflow outputs must be declared. Intermediate task outputs will not be retained by HealthOmics.
- - When using a Nextflow publishDir directive, the path must be a subdirectory of `/mnt/workflow/pubdir`
+### Task Parameters
+- ALL tasks/processes MUST declare CPU, memory, and container requirements.
+- You MUST use at least 1 GB memory and 1 CPU for all tasks.
+- You MAY set appropriate timeouts and retries using language-appropriate directives.
+- You MUST declare a `container` for each task. The container value MAY be a variable.
 
- **Containers**
- - All workflow tasks run in containers which must contain all software used in the script/ command of the task
- - Container images must be available in the users AWS ECR private registry in repositories that are readable by HealthOmics
-   - ECR private registry URLs are of the form `123456789012.dkr.ecr.us-east-1.amazonaws.com/myrepo:tag`
-   - Use `aws sts get-caller-identity` to get the account number and replace the `123456789012` in the example above
-   - Note that ECR public gallery images are **not** private repositories and cannot be used by HealthOmics unless using Pull Through Caches
- - HealthOmics can use ECR Pull Through Caches if the container image is not available in the users private registry: 
-    - The image must be available from a supported upstream registry
-    - Consult the [ECR Pull Through Cache](./ecr-pull-through-cache.md) steering documentation for more information
- - Alternatively, use Docker (Podman, Finch etc) to pull, retag and push the container image to the users private registry
+### Outputs
+- Final workflow outputs MUST be declared. Intermediate task outputs will NOT be retained by HealthOmics.
+- WHEN using Nextflow `publishDir`, the path MUST be a subdirectory of `/mnt/workflow/pubdir`.
 
- **`parameters.json`**
- - Define an example `parameters.json` for the workflow
- - Use the `SearchGenomicsFiles` tool from the HealthOmics MCP server to help identify suitable inputs
- - Workflow parameters should **NOT** be namespaced:
-    **correct:**
-    ```
-    {
-      "input_file": "s3://bucket/path/to/input.vcf"
-    }
-    ```
+### Containers
+- All workflow tasks run in containers. Containers MUST contain all software used in the script/command.
+- If the container is in a public registry (e.g. docker, ecr-public, quay.io) you MUST use ECR Pull Through caches. Consult the [ECR Pull Through Cache SOP](./ecr-pull-through-cache.md).
+- ALL other container images MUST be in the user's AWS ECR private registry in repositories readable by HealthOmics.
+  - Use the `ListECRRepositories`, `CheckContainerAvailability` tools to find existing containers
+  - Use the `CloneContainerToECR` tool to add containers to ECR 
+- IF suitable containers cannot be found you SHOULD create appropriate Dockerfiles, build the images and push them to ECR
+  - You MUST use x86_64 architecture containers `--platform linux/amd64`
 
-    **wrong:**
-    ```
-    {
-      "MyWorkflow.input_file": "s3://bucket/path/to/input.vcf"
-    }
-    ```
+### parameters.json
+- You MUST define an example `parameters.json` for the workflow.
+- You MAY use the `SearchGenomicsFiles` tool to help identify suitable inputs.
+- Workflow parameters MUST NOT be namespaced:
 
- **Linting**
- - Use the `LintAHOWorkflowDefinition` tool or `LintAHOWorkflowBundle` tool to validate the workflow definition
- - Resolve any linting errors before deployment
+  Correct:
+  ```json
+  {
+    "input_file": "s3://bucket/path/to/input.vcf"
+  }
+  ```
 
-## Deploying a Workflow
- **Packaging**
- - If the workflow is a single file, use the `PackageAHOWorkflowDefinition` tool to package the workflow definition into a zip archive
- - If the workflow is relatively small (< 15 files), use the `PackageAHOWorkflowBundle` tool to package the workflow definition into a zip archive
- - If the workflow is large (> 15 files), make a local zip file and copy it to S3.
- - Ensure the `main` entry point file is at the top level of the archive with required imports packaged relative to this file
- 
- **Deploy to AWS HealthOmics**
- - Use the `CreateAHOWorkflow` tool to create the new workflow in HealthOmics
- - If you are updating an existing HealthOmics workflow, use the `CreateAHOWorkflowVersion` tool to create a new version of the workflow
-   - Use semantic versioning for the version name e.g. `1.0.0` or `1.0.1`
- - Verify that the workflow has created successfully using the `GetAHOWorkflow` tool
+  Wrong:
+  ```json
+  {
+    "MyWorkflow.input_file": "s3://bucket/path/to/input.vcf"
+  }
+  ```
 
-## Running a Workflow
-  **Pre-conditions**
-  - Ensure the workflow has been deployed successfully
-  - Ensure an parameters.json or inputs.json file has been created and that the inputs are valid and accessible
-  - All file inputs must come from S3 locations in the same region as the workflow run
-  - Verify all S3 objects exist
-  - ALWAYS read and use preferences/ defaults from `.healthomics/config.toml` if present
-  - A run requires an output location in S3 that is writable, ask the user where they want their outputs to be written
-  - A run requires a Service Role with a trust policy that allows HealthOmics to assume the role and that grants access to read the inputs and write to the output location, identify or create a suitable role and use the roles ARN when starting the workflow.
+### Linting
+- IF the workflow is WDL or CWL, you MUST call `LintAHOWorkflowDefinition` or `LintAHOWorkflowBundle` to validate the workflow.
+- When calling the `Lint*` tools you MUST supply a file path(s) or S3 URI(s) to reference the workflow content
+- DO NOT proceed to deployment if linting errors exist — resolve them first.
+- You MAY proceed if only warnings remain, but fixing these is desirable.
 
-  **Run the workflow**
-  - Use the `RunAHOWorkflow` tool to run the workflow
-  - Use the `GetAHOWorkflowRun` tool to check the status of the workflow run
-  - Use the `GetAHO*Logs` tools to retrieve various logs for the run
-  - When the workflow completes outputs will be written to the location specified when starting the run
-  - If the workflow fails, use the `DiagnoseAHORunFailure` tool to get more information about the failure, then fix the workflow, create a new version of the workflow in HealthOmics and try again
+## Procedure: Deploying a Workflow
 
+### Step 1. Packaging
+- You MUST use the `PackageAHOWorkflow` tool to create a zip package of the workflow.
+- You MUST use file paths or S3 paths to reference input files to the package AND the output path.
+- For large workflows with more than ~15 files output to S3 is recommended.
 
+### Step 2. Deploy to HealthOmics
+- Call `CreateAHOWorkflow` to create the new workflow.
+- IF updating an existing workflow: call `CreateAHOWorkflowVersion` instead — see the [Workflow Versioning SOP](./workflow-versioning.md).
+  - Use semantic versioning (e.g., `1.0.0`, `1.0.1`).
+- You MUST reference the package created in Step 1 as the workflow `definition_source`.
+- You MUST reference the package as a file path or S3 URI.
+- Call `GetAHOWorkflow` to verify the workflow was created successfully.
+
+### Step 3. Run the Workflow
+- Follow the [Running a Workflow SOP](./running-a-workflow.md) to execute the deployed workflow.

@@ -7,7 +7,8 @@
       ],
       "timeout": 300000,
       "env": {
-        "HEALTHOMICS_DEFAULT_MAX_RESULTS": "100"
+        "HEALTHOMICS_DEFAULT_MAX_RESULTS": "100",
+        "AGENT": "kiro"
       },
       "disabled": false,
       "autoApprove": [

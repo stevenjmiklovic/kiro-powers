@@ -1,128 +1,101 @@
-# Git Integration for HealthOmics Workflows
+# SOP: Git Integration for HealthOmics Workflows
 
-## Overview
+## Purpose
 
-When a user provides a Git repository URL to create a HealthOmics workflow, **use the `definitionRepository` parameter** with `CreateAHOWorkflow` or `CreateAHOWorkflowVersion` instead of manually cloning, packaging, and uploading the workflow. This approach:
-- Eliminates manual download, zip, and S3 staging steps
-- Enables direct workflow creation from public or private repositories
-- Supports GitHub, GitLab, and Bitbucket
+This SOP defines how you, the agent, handle workflow creation when a user provides a Git repository URL. You MUST use the `definitionRepository` parameter instead of manually cloning, packaging, and uploading.
 
-## When to Use Git Integration
+## Trigger Conditions
 
-**Use `definitionRepository` when:**
+Follow this SOP WHEN:
 - User provides a GitHub, GitLab, or Bitbucket repository URL
 - User wants to create a workflow from a specific branch, tag, or commit
 - User references a public workflow repository (e.g., nf-core pipelines)
 - User wants to keep their workflow definition in source control
 
-**Use traditional packaging when:**
-- User has local workflow files not in a Git repository
+DO NOT follow this SOP WHEN:
+- User has local workflow files not in a Git repository — use traditional packaging instead
 - User provides an S3 URI for the workflow definition
 - User explicitly requests local packaging
 
 ## Supported Git Providers
 
-| Provider | Repository URL Format |
-|----------|----------------------|
+| Provider | URL Format |
+|----------|------------|
 | GitHub | `https://github.com/owner/repo` |
 | GitLab | `https://gitlab.com/owner/repo` |
 | Bitbucket | `https://bitbucket.org/owner/repo` |
 | GitLab Self-Managed | `https://gitlab.example.com/owner/repo` |
 | GitHub Enterprise | `https://github.example.com/owner/repo` |
 
-## Workflow for Git-Based Workflow Creation
+## Procedure
 
 ### Step 1: Check for Existing Code Connections
 
-Use `ListCodeConnections` to find existing connections for the Git provider:
-
-```
-ListCodeConnections(provider_type_filter="GitHub")  # or GitLab, Bitbucket, etc.
-```
-
-Look for a connection with status `AVAILABLE`. If found, use its `connection_arn`.
+1. Call `ListCodeConnections(provider_type_filter="GitHub")` (or GitLab, Bitbucket as appropriate).
+2. IF a connection with status `AVAILABLE` exists, use its `connection_arn`. Proceed to Step 3.
+3. IF no suitable connection exists, proceed to Step 2.
 
 ### Step 2: Create Code Connection (If Needed)
 
-If no suitable connection exists:
-
-1. **Create the connection:**
-   ```
-   CreateCodeConnection(
-       connection_name="my-github-connection",
-       provider_type="GitHub"  # GitHub, GitLab, Bitbucket, GitHubEnterpriseServer, GitLabSelfManaged
-   )
-   ```
-
-2. **Inform the user** that they must complete OAuth authorization in the AWS Console:
-   - The tool returns a `console_url` for completing authorization
-   - Connection status will be `PENDING` until OAuth is completed
-   - User must authorize the connection before it can be used
-
-3. **Verify connection status:**
-   ```
-   GetCodeConnection(connection_arn="arn:aws:codeconnections:...")
-   ```
-   - Wait for status to become `AVAILABLE` before proceeding
+1. Call `CreateCodeConnection` with:
+   - `connection_name`: a descriptive name (e.g., `"my-github-connection"`)
+   - `provider_type`: one of `GitHub`, `GitLab`, `Bitbucket`, `GitHubEnterpriseServer`, `GitLabSelfManaged`
+2. INFORM the user they must complete OAuth authorization in the AWS Console.
+   - The tool returns a `console_url` — provide this to the user.
+   - Connection status will be `PENDING` until OAuth is completed.
+3. Call `GetCodeConnection(connection_arn="...")` to verify status.
+4. DO NOT proceed until status is `AVAILABLE`.
 
 ### Step 3: Parse Repository Information
 
 Extract from the user-provided URL:
-- **fullRepositoryId**: `owner/repo` format (e.g., `nf-core/rnaseq`)
-- **sourceReference**: Branch, tag, or commit
-  - Type: `BRANCH`, `TAG`, or `COMMIT`
-  - Value: The branch name, tag name, or commit SHA
+- `fullRepositoryId`: `owner/repo` format (e.g., `nf-core/rnaseq`)
+- `sourceReference`:
+  - `type`: `BRANCH`, `TAG`, or `COMMIT`
+  - `value`: the branch name, tag name, or commit SHA
 
 ### Step 4: Check for Container Registry Map
 
-Before creating the workflow, check if the repository contains a container registry map file:
-- Common locations: `container-registry-map.json`, `registry-map.json`, `.healthomics/container-registry-map.json`
-
-**If a container registry map exists in the repository:**
-- Pass `container_registry_map_uri` pointing to the S3 location if uploaded
-- Or use `container_registry_map` parameter with the map contents
-
-**If no container registry map exists:**
-- Analyze the workflow definition for container references
-- If containers reference public registries (Docker Hub, Quay.io, ECR Public):
-  - Follow the [ECR Pull Through Cache](./ecr-pull-through-cache.md) steering guide
-  - Use `CreateContainerRegistryMap` to generate a registry map
-  - Use `ValidateHealthOmicsECRConfig` to verify ECR configuration
-- If containers reference private ECR repositories:
-  - Proceed without a container registry map (containers are already accessible)
+1. Check if the repository contains a container registry map file at common locations: `container-registry-map.json`, `registry-map.json`, `.healthomics/container-registry-map.json`.
+2. IF a container registry map exists:
+   - Pass `container_registry_map_uri` pointing to the S3 location if uploaded, OR use `container_registry_map` parameter with the map contents.
+3. IF no container registry map exists:
+   - Analyze the workflow definition for container references.
+   - IF containers reference public registries (Docker Hub, Quay.io, ECR Public):
+     - Follow the [ECR Pull Through Cache SOP](./ecr-pull-through-cache.md).
+     - Call `CreateContainerRegistryMap` to generate a registry map.
+     - Call `ValidateHealthOmicsECRConfig` to verify ECR configuration.
+   - IF containers reference private ECR repositories:
+     - Proceed without a container registry map.
 
 ### Step 5: Create the Workflow
 
-Use `CreateAHOWorkflow` with the `definition_repository` parameter:
+Call `CreateAHOWorkflow` with the `definition_repository` parameter:
 
 ```
 CreateAHOWorkflow(
     name="my-workflow",
     definition_repository={
-        "connectionArn": "arn:aws:codeconnections:us-east-1:123456789012:connection/abc123",
+        "connectionArn": "<connection_arn>",
         "fullRepositoryId": "owner/repo",
         "sourceReference": {
-            "type": "BRANCH",  # or TAG, COMMIT
-            "value": "main"   # branch name, tag, or commit SHA
+            "type": "BRANCH",
+            "value": "main"
         },
         "excludeFilePatterns": ["test/*", "docs/*"]  # optional
     },
     description="Workflow created from Git repository",
-    parameter_template_path="parameters.json",  # optional: path within repo
-    readme_path="README.md",  # optional: path within repo
+    parameter_template_path="parameters.json",  # optional
+    readme_path="README.md",  # optional
     container_registry_map={...}  # if needed
 )
 ```
 
 ### Step 6: Verify Workflow Creation
 
-```
-GetAHOWorkflow(workflow_id="1234567")
-```
-
-Check that:
-- Status is `ACTIVE`
-- Workflow type matches expected engine (WDL, NEXTFLOW, CWL)
+1. Call `GetAHOWorkflow(workflow_id="...")`.
+2. Confirm status is `ACTIVE`.
+3. Confirm workflow type matches expected engine (WDL, NEXTFLOW, CWL).
 
 ## Parameter Reference
 
@@ -130,28 +103,25 @@ Check that:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `connectionArn` | Yes | ARN of the CodeConnection to use |
-| `fullRepositoryId` | Yes | Repository identifier in `owner/repo` format |
+| `connectionArn` | Yes | ARN of the CodeConnection |
+| `fullRepositoryId` | Yes | `owner/repo` format |
 | `sourceReference.type` | Yes | `BRANCH`, `TAG`, or `COMMIT` |
 | `sourceReference.value` | Yes | Branch name, tag name, or commit SHA |
 | `excludeFilePatterns` | No | Glob patterns for files to exclude |
 
-### Additional Parameters for Git Workflows
+### Additional Parameters
 
 | Parameter | Description |
 |-----------|-------------|
-| `parameter_template_path` | Path to parameter template JSON within the repository |
-| `readme_path` | Path to README markdown file within the repository |
+| `parameter_template_path` | Path to parameter template JSON within the repo |
+| `readme_path` | Path to README markdown file within the repo |
 
 ## Common Scenarios
 
-### Creating from nf-core Pipeline
-
+### nf-core Pipeline
 ```
-# User: "Create a workflow from https://github.com/nf-core/rnaseq"
-
 1. ListCodeConnections(provider_type_filter="GitHub")
-2. If no connection: CreateCodeConnection(connection_name="github", provider_type="GitHub")
+2. IF no connection: CreateCodeConnection(connection_name="github", provider_type="GitHub")
 3. CreateAHOWorkflow(
        name="nf-core-rnaseq",
        definition_repository={
@@ -159,15 +129,12 @@ Check that:
            "fullRepositoryId": "nf-core/rnaseq",
            "sourceReference": {"type": "TAG", "value": "3.14.0"}
        },
-       container_registry_map={...}  # Use ECR pull-through cache mappings
+       container_registry_map={...}
    )
 ```
 
-### Creating from Specific Branch
-
+### Specific Branch
 ```
-# User: "Create workflow from my-org/my-workflow on the develop branch"
-
 CreateAHOWorkflow(
     name="my-workflow-dev",
     definition_repository={
@@ -178,11 +145,8 @@ CreateAHOWorkflow(
 )
 ```
 
-### Creating from Specific Commit
-
+### Specific Commit
 ```
-# User: "Create workflow from commit abc123 in owner/repo"
-
 CreateAHOWorkflow(
     name="my-workflow",
     definition_repository={
@@ -196,22 +160,20 @@ CreateAHOWorkflow(
 ## Error Handling
 
 ### Connection Not Available
-If `GetCodeConnection` returns status `PENDING`:
-- Remind user to complete OAuth authorization in AWS Console
-- Provide the console URL from the connection creation response
-- Wait for user confirmation before retrying
+- IF `GetCodeConnection` returns status `PENDING`:
+  - Remind user to complete OAuth authorization in AWS Console.
+  - Provide the console URL from the connection creation response.
+  - WAIT for user confirmation before retrying.
 
 ### Repository Access Denied
-If workflow creation fails with access errors:
-- Verify the connection has appropriate repository permissions
-- For private repositories, ensure OAuth scope includes repo access
-- Check that `fullRepositoryId` is correct
+- Verify the connection has appropriate repository permissions.
+- For private repositories, ensure OAuth scope includes repo access.
+- Check that `fullRepositoryId` is correct.
 
 ### Workflow Definition Not Found
-If HealthOmics cannot find the workflow definition:
-- Verify the repository contains a valid workflow file (main.wdl, main.nf, main.cwl)
-- Check `excludeFilePatterns` isn't excluding the main workflow file
-- Use `path_to_main` parameter if the main file isn't at the repository root
+- Verify the repository contains a valid workflow file (`main.wdl`, `main.nf`, `main.cwl`).
+- Check `excludeFilePatterns` isn't excluding the main workflow file.
+- Use `path_to_main` parameter if the main file isn't at the repository root.
 
 ## Required IAM Permissions
 
@@ -238,4 +200,4 @@ Users need these permissions for Git integration:
 
 - [AWS HealthOmics Git Integration Documentation](https://docs.aws.amazon.com/omics/latest/dev/workflows-git-integration.html)
 - [CreateWorkflow API Reference](https://docs.aws.amazon.com/omics/latest/api/API_CreateWorkflow.html)
-- [ECR Pull Through Cache Guide](./ecr-pull-through-cache.md)
+- [ECR Pull Through Cache SOP](./ecr-pull-through-cache.md)

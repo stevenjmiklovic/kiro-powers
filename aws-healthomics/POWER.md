@@ -16,8 +16,10 @@ Whenever you are asked to perform a task related to any of the following scenari
 
 - Creating a workflow from a remote Git repository URL (GitHub, GitLab, Bitbucket) -> use `./steering_files/git-integration.md` (takes precedence over workflow-development.md)
 - Creating a new WDL, Nextflow or CWL workflow from local files -> use `./steering_files/workflow-development.md`
+- Running a deployed HealthOmics workflow -> use `./steering_files/running-a-workflow.md`
+- Submitting, monitoring, or managing batch runs (multiple samples/runs at once) -> use `./steering_files/batch-runs.md`
 - Onboarding an existing WDL workflow ensuring compatibility with HealthOmics -> use `.\steering_files/migration-guide-for-wdl.md`
-- Onboarding an existing Nextflow workflow ensuring compatibility with HealthOmics -> use `./steering_files/migration-guide-for-wdl.md`
+- Onboarding an existing Nextflow workflow ensuring compatibility with HealthOmics -> use `./steering_files/migration-guide-for-nextflow.md`
 - Modifying, updating, or fixing an existing HealthOmics workflow -> use `./steering_files/workflow-versioning.md`
 - Diagnosing workflow creation issues -> use `./steering_files/troubleshooting.md`
 - Diagnosing run failures -> use `./steering_files/troubleshooting.md`

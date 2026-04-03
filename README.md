@@ -20,6 +20,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ---
 
+### aws-amplify
+**Build full-stack apps with AWS Amplify** - Build and extend full-stack applications with AWS Amplify Gen 2 using type-safe TypeScript, guided workflows, and best practices. Covers authentication, data models, storage, serverless functions, AI/ML integration, and deployment to sandbox and production.
+
+**MCP Servers:** aws-mcp
+
+---
+
 ### aws-healthomics
 
 **Create and Manage Bioinformatics Workflows with AWS HealthOmics** - create, migrate, run, debug and identify optimization opportunities for bioinformatics workflows in AWS HealthOmics.
@@ -32,6 +39,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 **Build AWS infrastructure with CDK and CloudFormation** - Generate well-architected AWS infrastructure with CDK and CloudFormation - access latest documentation, validate templates, and troubleshoot deployments.
 
 **MCP Servers:** awslabs.aws-iac-mcp-server
+
+---
+
+### aws-sam
+**Build serverless applications with AWS SAM** - Build, test, and deploy serverless applications using AWS Serverless Application Model (SAM) with local development workflow and MCP tooling.
+
+**MCP Servers:** awslabs.aws-serverless-mcp-server, fetch
 
 ---
 
@@ -119,6 +133,10 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ---
 
+
+## License
+
+Unless otherwise specified by the license in the individual power or the repository that hosts it, Kiro users have a non-exclusive license to access, download, and otherwise use the power for their personal or business purposes.
 
 ## Security
 
