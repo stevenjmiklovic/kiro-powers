@@ -6,6 +6,13 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ## Available powers
 
+### adr
+**Architecture Decision Records** - Create, maintain, and cross-reference Architecture Decision Records (ADRs) using MADR format. Infers decisions from git context, detects duplicates, manages supersession chains, and keeps an index file up to date.
+
+**MCP Servers:** None (Knowledge Base Power)
+
+---
+
 ### atlassian
 **Atlassian Admin** - Manage Jira projects, issues, and sprints alongside Confluence spaces and pages - plan work, track bugs, and document everything using the official Atlassian MCP server.
 
