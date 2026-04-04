@@ -6,6 +6,27 @@ Documentation is available at https://kiro.dev/docs/powers/
 
 ## Available powers
 
+### adr
+**Architecture Decision Records** - Create, maintain, and cross-reference Architecture Decision Records (ADRs) using MADR format. Infers decisions from git context, detects duplicates, manages supersession chains, and keeps an index file up to date.
+
+**MCP Servers:** None (Knowledge Base Power)
+
+---
+
+### alice-whiterabbit
+**JHU White Rabbit** - Guide to ALICE (AWS Language Intelligence and Cognitive Exploration) — manage Bedrock credentials, invoke LLMs, and use AI research utilities at Johns Hopkins.
+
+**MCP Servers:** None (Knowledge Base Power)
+
+---
+
+### atlassian
+**Atlassian Admin** - Manage Jira projects, issues, and sprints alongside Confluence spaces and pages - plan work, track bugs, and document everything using the official Atlassian MCP server.
+
+**MCP Servers:** atlassian (Remote MCP via SSE)
+
+---
+
 ### aws-agentcore
 **Build an agent with Amazon Bedrock AgentCore** - Build, test, and deploy AI agents using AWS Bedrock AgentCore with local development workflow. Amazon Bedrock AgentCore is an agentic platform for building, deploying, and operating effective agents.
 
