@@ -2,7 +2,34 @@
 name: "alice-whiterabbit"
 displayName: "JHU White Rabbit"
 description: "Guide to ALICE (AWS Language Intelligence and Cognitive Exploration) — manage Bedrock credentials, invoke LLMs, and use AI research utilities at Johns Hopkins"
-keywords: ["alice-cli", "bedrock", "llm-research", "jhu", "alice"]
+keywords:
+  - alice-cli
+  - alice
+  - bedrock
+  - llm-research
+  - jhu
+  - poetry
+  - pytest
+  - ruff
+  - mypy
+  - polly
+  - teaparty
+  - tui
+  - textual
+  - tofu
+  - terraform
+  - sso
+  - converse-api
+  - click
+  - pydub
+  - hypothesis
+  - moto
+  - rich
+  - agentcore
+  - cite
+  - cloud-locker
+  - looking-glass
+  - cheshire-gate
 author: "Steven J Miklovic, Johns Hopkins DRCC"
 ---
 
@@ -16,9 +43,34 @@ Built with Click, boto3, Rich, and Textual. Packaged with Poetry. Requires Pytho
 
 ## Available Steering Files
 
-- **research-prompts** — Prompt recipes for academic tasks: summarization, literature reviews, metadata generation, citation management, and batch processing
-- **model-selection** — Choosing the right Bedrock model for research tasks, cost-aware patterns, and a task-to-model quick reference
-- **development** — Developer workflows: testing, linting, type checking, project structure, and contribution patterns
+| File | Inclusion | Pattern / Trigger | Content |
+|---|---|---|---|
+| **development** | fileMatch | `alice-cli/src/**` | Project structure, conventions, tooling commands, new command checklist, changelog rules |
+| **infrastructure** | fileMatch | `terraform/**` | Environment layout, module inventory, IAM roles, tofu workflow, state management |
+| **tui-development** | fileMatch | `alice-cli/src/**/tui/**` | AliceScreen contract, screen registry, widgets, CRT theme, worker threads |
+| **teaparty-development** | fileMatch | `alice-cli/src/**/teaparty/**` | Pipeline stages, Polly engines, SSML, voice resolver, script schema, audio stitching |
+| **testing-patterns** | fileMatch | `alice-cli/tests/**` | pytest, hypothesis PBT, moto mocking, fixtures, benchmark patterns |
+| **model-selection** | manual | `#model-selection` in chat | Bedrock model tiers, cost-aware patterns, task-to-model reference |
+| **research-prompts** | manual | `#research-prompts` in chat | Prompt recipes for summarization, literature reviews, metadata, citations, batch |
+
+## Current Development
+
+Active specs in `.kiro/specs/`:
+
+| Spec | Status | Scope |
+|---|---|---|
+| teaparty | complete | Podcast-style audio generation pipeline (Bedrock + Polly + pydub) |
+| tui-enhancements | complete | 12 new TUI screens, AliceScreen base class, streaming, command palette |
+| agentcore-integration | in progress | AgentCore agent deployment and management |
+| alice-notebook | in progress | Jupyter-style notebook interface |
+| cite-enhancements | in progress | Citation pipeline improvements |
+| cheshire-gate-enhancements | in progress | API gateway enhancements |
+| looking-glass-vector-indexing | in progress | Vector search indexing |
+| doi-mint-command | in progress | DOI minting CLI command |
+| madhatter | in progress | Text transformation pipeline |
+| cloudwatch-api-key-dashboard | in progress | API key usage monitoring |
+
+Architectural decisions are tracked in `alice-cli/docs/adr/` (15 ADRs). Key decisions: AliceScreen base class (ADR-013), data-driven screen registry (ADR-015), worker thread UI communication (ADR-014), config precedence (ADR-003), error hierarchy (ADR-009).
 
 ## Onboarding
 
@@ -76,6 +128,37 @@ alice install-completion
 ```
 
 Installs tab completion for bash, zsh, fish, or PowerShell. Restart your shell afterward.
+
+## JH-AiAccessRole (Developer Access)
+
+The `JH-AiAccessRole` is an IAM role that grants broad permissions to develop and consume all ALICE project resources (Bedrock, AgentCore, Lambda, ECS, DynamoDB, CloudWatch, etc.). Any user with an SSO role in the account can assume it.
+
+### AWS CLI Configuration
+
+Add a profile to `~/.aws/config` that chains off your SSO profile:
+
+```ini
+[profile drcc-ai-access]
+role_arn = arn:aws:iam::584034200963:role/bedrock/JH-AiAccessRole
+source_profile = drcc-sso
+region = us-east-1
+```
+
+Then authenticate and verify:
+
+```bash
+aws sso login --profile drcc-sso
+aws sts get-caller-identity --profile drcc-ai-access
+```
+
+### When to Use
+
+- `drcc-ai` (SSO direct) — day-to-day `alice` CLI usage, read-only console browsing
+- `drcc-ai-access` (assume role) — Terraform applies, deploying agents, managing infrastructure, CodeBuild triggers, DynamoDB admin operations
+
+### What It Grants
+
+Broad access to: Bedrock, AgentCore, Lambda, CodeBuild, ECR, ECS, EFS, ELB, DynamoDB, CloudWatch, API Gateway, EventBridge, SNS, X-Ray, Route 53, Service Discovery. IAM is scoped to the `/bedrock/` path. S3, Secrets Manager, and SSM are scoped to project namespaces.
 
 ## Common Workflows
 

@@ -1,3 +1,7 @@
+---
+inclusion: manual
+---
+
 # ALICE CLI — Model Selection Guide
 
 Guidance on choosing the right Bedrock model for different research and library tasks.

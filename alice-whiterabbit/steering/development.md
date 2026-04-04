@@ -1,122 +1,99 @@
-# ALICE CLI — Development Guide
+---
+inclusion: fileMatch
+fileMatchPattern: "alice-cli/src/**"
+---
 
-## Project Structure
+# ALICE CLI — Development Context
+
+## Project Layout
 
 ```
-alice-cli/
-├── pyproject.toml              # Poetry config, dependencies, tool settings
-├── poetry.lock
-└── src/alice_cli/
-    ├── cli.py                  # Click group, global options, command registration
-    ├── commands/               # One file per verb (20+ commands)
-    ├── auth.py                 # JHED detection from STS
-    ├── secrets.py              # Secrets Manager retrieval
-    ├── config.py               # Configuration resolution and precedence
-    ├── store.py                # Persistent credential storage (~/.alice/)
-    ├── locker.py               # CloudLocker (S3 + local session storage)
-    ├── session_record.py       # Session serialization
-    ├── error_handler.py        # AWS error extraction and user-friendly messages
-    ├── retry.py                # Tenacity retry decorators for AWS calls
-    ├── logging.py              # Structlog configuration (--debug mode)
-    ├── console.py              # Rich stderr helpers
-    ├── personality.py          # All user-facing text and messaging
-    ├── models.py               # Dataclasses, enums, model aliases
-    ├── errors.py               # Error hierarchy
-    ├── formatting.py           # Output formatters (export, eval, dotenv, json)
-    ├── validators.py           # Dependency checks
-    ├── pricing.py              # Model pricing table
-    ├── agentcore_config.py     # AgentCore runtime config persistence
-    └── tui/                    # Optional Textual TUI
-        ├── app.py
-        └── theme.py
+alice-cli/src/alice_cli/
+├── cli.py                  # Click group, global options, command registration
+├── commands/               # One file per verb (24+ commands)
+├── teaparty/               # Podcast pipeline (see teaparty-development steering)
+├── tui/                    # Textual TUI (see tui-development steering)
+├── cite/                   # Citation management pipeline
+├── aws/                    # AWS clients (bedrock, sts, secrets, session)
+├── personalities/          # Voice personalities (alice, mr_rogers, shodan)
+├── auth.py                 # JHED detection from STS
+├── config.py               # Configuration resolution (ADR-003)
+├── store.py                # Persistent credential storage (~/.alice/)
+├── locker.py               # CloudLocker (S3 + local session storage)
+├── session_record.py       # Session serialization
+├── error_handler.py        # AWS error extraction, user-friendly messages
+├── errors.py               # Error hierarchy extending ClickException (ADR-009)
+├── retry.py                # Tenacity retry decorators for AWS calls
+├── console.py              # Rich stderr helpers (ADR-004: stderr=human, stdout=machine)
+├── personality.py          # All user-facing text and messaging
+├── models.py               # Dataclasses, enums, model aliases
+├── formatting.py           # Output formatters (export, eval, dotenv, json)
+├── validators.py           # Dependency checks
+├── pricing.py              # Model pricing table
+├── constants.py            # Bucket templates, env var names
+├── memory.py               # AgentCore Memory client
+└── agentcore_config.py     # AgentCore runtime config persistence
 ```
 
-## Development Setup
+## Key Conventions
+
+| Convention | Detail |
+|---|---|
+| User-facing text | All in `personality.py` — never hardcode strings in commands |
+| Output channels | stderr = human (Rich via `console.py`), stdout = machine (ADR-004) |
+| Error handling | Raise `AliceCLIError` subclasses from `errors.py` (ADR-009) |
+| AWS retries | Use `@with_bedrock_retry` / `@with_s3_retry` from `retry.py` |
+| Config precedence | CLI flag > env var > ~/.alice/.env > ~/.alice/credentials.json > defaults (ADR-003) |
+| Model aliases | Defined in `models.py`, use aliases (`sonnet`, `opus`) not full IDs |
+| Optional extras | Lazy import with guard functions (ADR-006): `require_agentcore()`, `launch_tui()` |
+| Logging | structlog via `logging.py`, enabled with `--debug` |
+
+## Dev Commands
 
 ```bash
 cd alice-cli
-poetry install --extras tui
-poetry install --extras agentcore
-```
 
-## Testing
-
-```bash
-# Run all tests
+# Test
 poetry run pytest
-
-# With coverage
 poetry run pytest --cov=alice_cli --cov-report=term-missing
-
-# Run specific test file
-poetry run pytest tests/test_auth.py
-
-# Run tests matching a pattern
 poetry run pytest -k "test_invoke"
-
-# Run benchmarks
 poetry run pytest tests/benchmarks/ --benchmark-only
-```
 
-Tests use pytest, hypothesis (property-based testing), pytest-mock, and moto (AWS service mocking).
-
-## Linting and Formatting
-
-```bash
-# Ruff lint check
+# Lint + format
 poetry run ruff check src/ tests/
-
-# Ruff auto-fix
 poetry run ruff check --fix src/ tests/
-
-# Ruff format
 poetry run ruff format src/ tests/
-```
 
-Ruff config: Python 3.12 target, 100-char line length. Rules: E, F, I, N, UP, B, SIM, TCH.
-
-## Type Checking
-
-```bash
+# Type check
 poetry run mypy src/alice_cli/
-```
 
-Strict mode enabled. Some modules with optional extras have `ignore_errors = true`.
-
-## Security Scanning
-
-```bash
+# Security
 poetry run bandit -r src/alice_cli/
 poetry run detect-secrets scan
 ```
 
-## Changelog Management
+## Ruff Config
 
-Uses towncrier for changelog entries:
-
-```bash
-# Create a changelog fragment
-echo "Added new feature" > changes/123.feature
-
-# Build changelog
-poetry run towncrier build --version 0.3.0
-```
-
-Fragment types: `feature`, `bugfix`, `deprecation`, `breaking`, `doc`, `misc`.
+- Target: Python 3.12
+- Line length: 100
+- Rules: E, F, I, N, UP, B, SIM, TCH
 
 ## Adding a New Command
 
 1. Create `src/alice_cli/commands/your_command.py`
 2. Define a Click command function
-3. Register it in `src/alice_cli/cli.py`
+3. Register in `src/alice_cli/cli.py`
 4. Add tests in `tests/test_your_command.py`
-5. Add a changelog fragment in `changes/`
+5. Add changelog fragment in `changes/`
 
-## Key Conventions
+## Changelog (Towncrier)
 
-- All user-facing text lives in `personality.py`
-- Status messages go to stderr (via `console.py`), data to stdout
-- AWS calls use retry decorators from `retry.py`
-- Errors use the hierarchy in `errors.py` and are formatted by `error_handler.py`
-- Configuration follows precedence: CLI flag > env var > stored credentials > default
-- Model aliases are defined in `models.py`
+```bash
+# Fragment: changes/<short-slug>.<type>.md
+# Types: feature, bugfix, deprecation, breaking, doc, misc
+# Content: single sentence, RST double-backtick for CLI commands
+echo "Added ``alice teaparty`` podcast generation command" > changes/teaparty.feature.md
+
+# Build
+poetry run towncrier build --version 0.3.0
+```

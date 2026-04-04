@@ -1,3 +1,7 @@
+---
+inclusion: manual
+---
+
 # ALICE CLI — Research Prompt Recipes
 
 Prompt patterns for common academic and library research tasks using ALICE.
